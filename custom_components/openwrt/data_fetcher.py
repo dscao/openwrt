@@ -82,7 +82,7 @@ class DataFetcher:
         url =  host + DO_URL
         
         try:
-            async with timeout(2): 
+            async with timeout(10): 
                 resdata = await self._hass.async_add_executor_job(self.requestpost_cookies, url, header, body) 
                 if resdata ==403:
                     _LOGGER.debug("OPENWRT Username or Password is wrong，please reconfig!")
@@ -123,7 +123,7 @@ class DataFetcher:
         url =  self._host + DO_URL + parameter
         
         try:
-            async with timeout(5): 
+            async with timeout(10): 
                 resdata = await self._hass.async_add_executor_job(self.requestpost_data, url, header, body)
         except (
             ClientConnectorError

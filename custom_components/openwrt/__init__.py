@@ -116,7 +116,7 @@ class OPENWRTDataUpdateCoordinator(DataUpdateCoordinator):
         _LOGGER.debug(sysauth) 
         
         try:
-            async with timeout(5):
+            async with timeout(10):
                 data = await self._fetcher.get_data(sysauth)
                 if data == 401:
                     self._token_expire_time = 0
