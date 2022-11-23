@@ -43,10 +43,10 @@ class OPENWRTSensor(CoordinatorEntity):
         """Return the device info."""
         return {
             "identifiers": {(DOMAIN, self.coordinator.host)},
-            "name": "openwrt",
+            "name": self.coordinator.data["device_name"],
             "manufacturer": "OpenWrt",
-            "model": "OpenWrt Router",
-            "sw_version": "1.0",
+            "model": self.coordinator.data["model"],
+            "sw_version": self.coordinator.data["sw_version"],
         }
 
     @property

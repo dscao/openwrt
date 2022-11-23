@@ -90,3 +90,17 @@ SENSOR_TYPES = {
 }
 
  
+BUTTON_TYPES = {
+    "openwrt_restart": {
+        "label": "OpenWrt重启",
+        "name": "openwrt_restart",
+        "device_class": "restart",
+        "action": "restart",
+    },
+    "openwrt_restart_reconnect_gw": {
+        "label": "OpenWrt重连GW网络",
+        "name": "openwrt_reconnect_gw",
+        "device_class": "restart",
+        "action": "reconnect_gw",
+    }
+}

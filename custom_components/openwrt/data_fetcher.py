@@ -52,6 +52,13 @@ class DataFetcher:
         resdata = json.loads(json_text)
         return resdata
         
+    def requestget_data_text(self, url, headerstr, datastr):
+        responsedata = requests.post(url, headers=headerstr, verify=False)
+        if responsedata.status_code != 200:
+            return responsedata.status_code
+        resdata = responsedata.content.decode('utf-8')
+        return resdata
+        
     def requestpost_json(self, url, headerstr, json_body):
         responsedata = requests.post(url, headers=headerstr, json = json_body, verify=False)
         if responsedata.status_code != 200:
@@ -86,8 +93,9 @@ class DataFetcher:
                 resdata = await self._hass.async_add_executor_job(self.requestpost_cookies, url, header, body) 
                 if resdata ==403:
                     _LOGGER.debug("OPENWRT Username or Password is wrong，please reconfig!")
-                    return
-                _LOGGER.debug("login_successfully for OPENWRT")
+                    return resdata
+                else:                   
+                    _LOGGER.debug("login_successfully for OPENWRT")
         except (
             ClientConnectorError
         ) as error:
@@ -124,7 +132,7 @@ class DataFetcher:
         
         try:
             async with timeout(10): 
-                resdata = await self._hass.async_add_executor_job(self.requestpost_data, url, header, body)
+                resdata = await self._hass.async_add_executor_job(self.requestget_data, url, header)
         except (
             ClientConnectorError
         ) as error:
@@ -137,9 +145,10 @@ class DataFetcher:
         
         # resdata["cpuinfo"] = " 1795.377 MHz    +20.0°C  (crit = +100.0°C) \n" 
         self._data = {}
+
         cpuinfo = resdata["cpuinfo"]
         cputemp = re.findall(r"\+(.+?)°C",cpuinfo)
-        _LOGGER.debug(cputemp)
+        #_LOGGER.debug(cputemp)
         if cputemp:
             if isinstance(cputemp,list):
                 self._data["openwrt_cputemp"] = cputemp[0]
@@ -175,7 +184,31 @@ class DataFetcher:
 
         return
   
-        
+    async def _get_openwrt_version(self, sysauth):
+        header = {
+            "Cookie": "sysauth=" + sysauth
+        }
+             
+        body = ""
+        url =  self._host + DO_URL + "/admin/status/overview"        
+        try:
+            async with timeout(10): 
+                resdata = await self._hass.async_add_executor_job(self.requestget_data_text, url, header, body)
+        except (
+            ClientConnectorError
+        ) as error:
+            raise UpdateFailed(error)
+        _LOGGER.debug("Requests remaining: %s", url)        
+        if resdata == 401 or resdata == 403:
+            self._data = 401
+            return
+        openwrtinfo = {}
+        resdata = resdata.replace("\n","").replace("\r","")
+        openwrtinfo["sw_version"] = re.findall(r"内核版本</td><td>(.+?)</td>", str(resdata))
+        openwrtinfo["device_name"] = re.findall(r"<meta name=\"application-name\" content=\"(.+?) - LuCI", resdata)[0]
+        openwrtinfo["model"] = re.findall(r"固件版本</td><td>(.+?)</td>", resdata)
+
+        return openwrtinfo
         
         
     async def get_data(self, sysauth):  
@@ -183,7 +216,7 @@ class DataFetcher:
             self._get_openwrt_status(sysauth),
         ]
         await asyncio.wait(threads)
-        
+                    
         return self._data
 
 

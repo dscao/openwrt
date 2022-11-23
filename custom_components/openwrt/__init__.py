@@ -25,7 +25,7 @@ import asyncio
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BUTTON]
 
 
 async def async_setup(hass: HomeAssistant, config: Config) -> bool:
@@ -94,6 +94,10 @@ class OPENWRTDataUpdateCoordinator(DataUpdateCoordinator):
         _LOGGER.debug("%s Data will be update every %s", host, update_interval)
         self._token = ""
         self._token_expire_time = 0
+        self._allow_login = True
+        self._sw_version = "1.0"
+        self._device_name = "OpenWrt"
+        self._model = "OpenWrt Router"
     
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
 
@@ -104,25 +108,38 @@ class OPENWRTDataUpdateCoordinator(DataUpdateCoordinator):
         if time.time() < self._token_expire_time:
             return self._token
         else:
-            self._token = await self._fetcher._login_openwrt()
-            self._token_expire_time = time.time() + 60*60*2        
-            return self._token
+            if self._allow_login == True:
+                self._token = await self._fetcher._login_openwrt()
+                if self._token == 403:
+                    self._allow_login = False
+                self._token_expire_time = time.time() + 60*60*2        
+                return self._token
 
     async def _async_update_data(self):
         """Update data via DataFetcher."""
         _LOGGER.debug("token_expire_time=%s", self._token_expire_time)
-
-        sysauth = await self.get_access_token()
-        _LOGGER.debug(sysauth) 
         
-        try:
-            async with timeout(10):
-                data = await self._fetcher.get_data(sysauth)
-                if data == 401:
-                    self._token_expire_time = 0
-                    return
-                if not data:
-                    raise UpdateFailed("failed in getting data")
-                return data
-        except Exception as error:
-            raise UpdateFailed(error) from error
+        if self._allow_login == True:
+            sysauth = await self.get_access_token()
+            _LOGGER.debug(sysauth) 
+            
+            if self._sw_version == "1.0":
+                openwrtinfodata = await self._fetcher._get_openwrt_version(sysauth)
+                self._sw_version = openwrtinfodata["sw_version"]
+                self._device_name = openwrtinfodata["device_name"]
+                self._model = openwrtinfodata["model"]
+            
+            try:
+                async with timeout(10):
+                    data = await self._fetcher.get_data(sysauth)
+                    if data == 401:
+                        self._token_expire_time = 0
+                        return
+                    if not data:
+                        raise UpdateFailed("failed in getting data")
+                    data["sw_version"] = self._sw_version
+                    data["device_name"] = self._device_name
+                    data["model"] = self._model
+                    return data
+            except Exception as error:
+                raise UpdateFailed(error) from error
