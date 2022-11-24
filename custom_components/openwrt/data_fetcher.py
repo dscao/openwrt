@@ -145,9 +145,14 @@ class DataFetcher:
         
         # resdata["cpuinfo"] = " 1795.377 MHz    +20.0°C  (crit = +100.0°C) \n" 
         self._data = {}
-
-        cpuinfo = resdata["cpuinfo"]
+        if resdata.get("cpuinfo"):
+            cpuinfo = resdata["cpuinfo"]
+        elif resdata.get("cpuwd"):
+            cpuinfo = resdata["cpuwd"]
+        else:
+            cpuinfo = ""
         cputemp = re.findall(r"\+(.+?)°C",cpuinfo)
+         
         #_LOGGER.debug(cputemp)
         if cputemp:
             if isinstance(cputemp,list):
