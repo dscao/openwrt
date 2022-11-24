@@ -97,6 +97,13 @@ BUTTON_TYPES = {
         "device_class": "restart",
         "action": "restart",
     },
+    "openwrt_restart_reconnect_wan": {
+        "label": "OpenWrt重连wan网络",
+        "name": "openwrt_reconnect_wan",
+        "device_class": "restart",
+        "action": "reconnect_iface",
+        "iface": "wan", 
+    },
     "openwrt_restart_reconnect_gw": {
         "label": "OpenWrt重连GW网络",
         "name": "openwrt_reconnect_gw", #实体名称
