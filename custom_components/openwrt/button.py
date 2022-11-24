@@ -154,9 +154,9 @@ class OPENWRTButton(ButtonEntity):
             if action == "restart":
                 parameter1 = "/admin/system/reboot"       
                 parameter2 = "/admin/system/reboot/call" 
-            elif action == "reconnect_gw":
-                parameter1 = "admin/network/network"       
-                parameter2 = "admin/network/iface_reconnect/gw" 
+            elif action == "reconnect_iface":
+                parameter1 = "admin/network/network"
+                parameter2 = "admin/network/iface_reconnect/" + BUTTON_TYPES[self.kind]["iface"]
                 
             
             sysauth = await self.get_access_token()          
@@ -164,7 +164,7 @@ class OPENWRTButton(ButtonEntity):
             header = {
                 "Cookie": "sysauth=" + sysauth
             }        
-            parameter = "/admin/system/reboot"        
+      
             body = ""
             url =  self._host + DO_URL + parameter1   
             try:

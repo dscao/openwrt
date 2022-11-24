@@ -99,8 +99,16 @@ BUTTON_TYPES = {
     },
     "openwrt_restart_reconnect_gw": {
         "label": "OpenWrt重连GW网络",
-        "name": "openwrt_reconnect_gw",
+        "name": "openwrt_reconnect_gw", #实体名称
         "device_class": "restart",
-        "action": "reconnect_gw",
+        "action": "reconnect_iface",
+        "iface": "gw",  #网络接口
+    },
+    "openwrt_restart_reconnect_docker": {
+        "label": "OpenWrt重连docker网络",
+        "name": "openwrt_reconnect_docker",
+        "device_class": "restart",
+        "action": "reconnect_iface",
+        "iface": "docker", 
     }
 }
