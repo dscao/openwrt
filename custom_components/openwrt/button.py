@@ -135,7 +135,7 @@ class OPENWRTButton(ButtonEntity):
         
         
     def requestpost_data(self, url, headerstr, datastr):
-        responsedata = requests.post(url, headers=headerstr, data = datastr, verify=False)
+        responsedata = requests.post(url, headers=headerstr, data = datastr, verify=False, allow_redirects=False)
         if responsedata.status_code != 200:
             return responsedata.status_code
         _LOGGER.debug(responsedata)
@@ -150,22 +150,26 @@ class OPENWRTButton(ButtonEntity):
         
     async def _openwrt_action(self, action): 
         if self._allow_login == True:
-        
+            body = "token={{token}}&_=0.7647894831805453"
+            contenttype = "application/x-www-form-urlencoded"
+            sysauth = await self.get_access_token()          
+                
+            header = {
+                "Cookie": "sysauth=" + sysauth
+            } 
+            
             if action == "restart":
                 parameter1 = "/admin/system/reboot"       
                 parameter2 = "/admin/system/reboot/call" 
             elif action == "reconnect_iface":
                 parameter1 = "admin/network/network"
                 parameter2 = "admin/network/iface_reconnect/" + BUTTON_TYPES[self.kind]["iface"]
-                
-            
-            sysauth = await self.get_access_token()          
-                
-            header = {
-                "Cookie": "sysauth=" + sysauth
-            }        
-      
-            body = ""
+            elif action == "submit_data":
+                parameter1 = BUTTON_TYPES[self.kind]["parameter1"]
+                parameter2 = BUTTON_TYPES[self.kind]["parameter2"]
+                body = BUTTON_TYPES[self.kind]["body"]
+                # contenttype = "multipart/form-data; boundary=----" + re.findall(r"------(.+?)\r\n", body)[0],
+
             url =  self._host + DO_URL + parameter1   
             try:
                 async with timeout(10): 
@@ -180,25 +184,35 @@ class OPENWRTButton(ButtonEntity):
                 self._data = 401
                 return
             resdata = resdata.replace("\n","").replace("\r","")
-            action_token = re.findall(r"token: '(.+?)' ", str(resdata))[0]
-            _LOGGER.debug("action_token: %s ", action_token) 
+            action_tokena = re.findall(r"token: '(.+?)' ", str(resdata))
+            action_tokenb = re.findall(r"name=\"token\" value=\"(.+?)\"", str(resdata))
+            #_LOGGER.debug( action_tokena)
+            #_LOGGER.debug( action_tokenb)
+            if len(action_tokena)>0:            
+                action_token = action_tokena[0]
+            elif len(action_tokenb)>0:
+                action_token = action_tokenb[0]
             
+            _LOGGER.debug("action_token: %s ", action_token) 
+            if action == "submit_data":
+                body["token"] = action_token
+            else:
+                body = body.replace("{{token}}", action_token)
             header = {
                 "Cookie": "sysauth=" + sysauth,
                 "Accept": "*/*",
                 "Accept-Encoding": "gzip, deflate",
                 "Accept-Language": "zh-CN,zh-TW;q=0.9,zh;q=0.8,en-US;q=0.7,en;q=0.6",
-                "Content-type": "application/x-www-form-urlencoded",
+                "Content-type": str(contenttype),
                 "Host": self._host.replace("http://","").replace("https://",""),
                 "Origin": self._host,
                 "Referer": url,
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36"
 
-            }
-
-            body = "token=" + action_token +"&_=0.7647894831805453"
+            }            
             url =  self._host + DO_URL + parameter2
             _LOGGER.debug(url)
+            _LOGGER.debug(body)
             try:
                 async with timeout(10): 
                     resdata = await self._hass.async_add_executor_job(self.requestpost_data, url, header, body)
