@@ -63,30 +63,17 @@ SENSOR_TYPES = {
         "label": "WAN IP6 Uptime",
         "name": "openwrt_wan6_uptime",
     },
-    # "openwrt_total_up": {
-        # "icon": "mdi:upload-network",
-        # "label": "上传总量",
-        # "name": "openwrt_totalup",
-        # "unit_of_measurement": "GB",
-    # },
-    # "openwrt_total_down": {
-        # "icon": "mdi:download-network",
-        # "label": "下载总量",
-        # "name": "openwrt_totaldown",
-        # "unit_of_measurement": "GB",
-    # },     
-    # "openwrt_upload": {
-        # "icon": "mdi:wifi-arrow-up",
-        # "label": "上传速度",
-        # "name": "openwrt_upload",
-        # "unit_of_measurement": "MB/s",
-    # },
-    # "openwrt_download": {
-        # "icon": "mdi:wifi-arrow-down",
-        # "label": "下载速度",
-        # "name": "openwrt_download",
-        # "unit_of_measurement": "MB/s",
-    # },
+    "openwrt_user_online": {
+        "icon": "mdi:account-multiple",
+        "label": "在线用户数",
+        "name": "openwrt_user_online",
+    },
+    "openwrt_conncount": {
+        "icon": "mdi:lan-connect",
+        "label": "活动连接",
+        "name": "openwrt_conncount",
+    },
+    
 }
 
  

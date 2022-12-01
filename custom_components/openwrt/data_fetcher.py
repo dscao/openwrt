@@ -168,6 +168,10 @@ class DataFetcher:
         self._data["openwrt_cpu"] = resdata["cpuusage"].replace("\n%","")
         self._data["openwrt_memory"] = round((1 - resdata["memory"]["available"]/resdata["memory"]["total"])*100,0)
         self._data["openwrt_memory_attrs"] = resdata["memory"]
+        self._data["openwrt_conncount"] = resdata["conncount"]
+        if resdata.get("userinfo"):
+            self._data["openwrt_user_online"] = resdata["userinfo"].replace("\n","")
+        
         if resdata.get("wan"):
             self._data["openwrt_wan_ip"] = resdata["wan"]["ipaddr"]
             self._data["openwrt_wan_ip_attrs"] = resdata["wan"]            
@@ -187,12 +191,7 @@ class DataFetcher:
                 self._data["openwrt_wan6_uptime"] = resdata["wan6"]["uptime"]
         else:
             self._data["openwrt_wan6_ip"] = ""
-            self._data["openwrt_wan6_uptime"] = ""
-        # self._data["openwrt_upload"] = round(resdata["Data"]["sysstat"]["stream"]["upload"]/1024/1024, 3)
-        # self._data["openwrt_download"] = round(resdata["Data"]["sysstat"]["stream"]["download"]/1024/1024, 3)
-        # self._data["openwrt_total_up"] = round(resdata["Data"]["sysstat"]["stream"]["total_up"]/1024/1024/1024, 2)
-        # self._data["openwrt_total_down"] = round(resdata["Data"]["sysstat"]["stream"]["total_down"]/1024/1024/1024, 2)
-        
+            self._data["openwrt_wan6_uptime"] = ""    
         
         querytime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self._data["querytime"] = querytime
