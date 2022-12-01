@@ -171,6 +171,8 @@ class DataFetcher:
         self._data["openwrt_conncount"] = resdata["conncount"]
         if resdata.get("userinfo"):
             self._data["openwrt_user_online"] = resdata["userinfo"].replace("\n","")
+        else:
+            self._data["openwrt_user_online"] = ""
         
         if resdata.get("wan"):
             self._data["openwrt_wan_ip"] = resdata["wan"]["ipaddr"]
