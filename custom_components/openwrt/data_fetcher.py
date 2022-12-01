@@ -160,21 +160,31 @@ class DataFetcher:
         else:
             self._data["openwrt_cputemp"] = 0
         
-        self._data["openwrt_uptime"] = self.seconds_to_dhms(resdata["uptime"])        
+        self._data["openwrt_uptime"] = self.seconds_to_dhms(resdata["uptime"])
+        try:
+            self._data["openwrt_uptime"] = self.seconds_to_dhms(resdata["uptime"])
+        except Exception:
+            self._data["openwrt_uptime"] = resdata["uptime"]
         self._data["openwrt_cpu"] = resdata["cpuusage"].replace("\n%","")
         self._data["openwrt_memory"] = round((1 - resdata["memory"]["available"]/resdata["memory"]["total"])*100,0)
         self._data["openwrt_memory_attrs"] = resdata["memory"]
         if resdata.get("wan"):
             self._data["openwrt_wan_ip"] = resdata["wan"]["ipaddr"]
-            self._data["openwrt_wan_ip_attrs"] = resdata["wan"]
-            self._data["openwrt_wan_uptime"] = self.seconds_to_dhms(resdata["wan"]["uptime"]) 
+            self._data["openwrt_wan_ip_attrs"] = resdata["wan"]            
+            try:
+                self._data["openwrt_wan_uptime"] = self.seconds_to_dhms(resdata["wan"]["uptime"]) 
+            except Exception:
+                self._data["openwrt_wan_uptime"] = resdata["wan"]["uptime"]
         else:
             self._data["openwrt_wan_ip"] = ""
             self._data["openwrt_wan_uptime"] = ""
         if resdata.get("wan6"):
             self._data["openwrt_wan6_ip"] = resdata["wan6"]["ip6addr"]
             self._data["openwrt_wan6_ip_attrs"] = resdata["wan6"]
-            self._data["openwrt_wan6_uptime"] = self.seconds_to_dhms(resdata["wan6"]["uptime"]) 
+            try:
+                self._data["openwrt_wan6_uptime"] = self.seconds_to_dhms(resdata["wan6"]["uptime"]) 
+            except Exception:
+                self._data["openwrt_wan6_uptime"] = resdata["wan6"]["uptime"]
         else:
             self._data["openwrt_wan6_ip"] = ""
             self._data["openwrt_wan6_uptime"] = ""
