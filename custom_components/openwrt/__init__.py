@@ -121,6 +121,7 @@ class OPENWRTDataUpdateCoordinator(DataUpdateCoordinator):
         
         if self._allow_login == True:
             sysauth = await self.get_access_token()
+            sysauth = str(sysauth)
             _LOGGER.debug(sysauth) 
             
             if self._sw_version == "1.0":
