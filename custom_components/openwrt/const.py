@@ -22,56 +22,56 @@ SENSOR_TYPES = {
     "openwrt_uptime": {
         "icon": "mdi:clock-time-eight",
         "label": "OpenWrt启动时长",
-        "name": "openwrt_uptime",
+        "name": "Uptime",
     },
      "openwrt_cpu": {
         "icon": "mdi:cpu-64-bit",
         "label": "CPU占用",
-        "name": "openwrt_cpu",
+        "name": "CPU",
         "unit_of_measurement": "%",
     },
      "openwrt_cputemp": {
         "icon": "mdi:thermometer",
         "label": "CPU温度",
-        "name": "openwrt_cputemp",
+        "name": "CPU_temperature",
         "unit_of_measurement": "°C",
         "device_class": "temperature",
     },
     "openwrt_memory": {
         "icon": "mdi:memory",
         "label": "内存占用",
-        "name": "openwrt_memory",
+        "name": "Memory",
         "unit_of_measurement": "%",
     },   
     "openwrt_wan_ip": {
         "icon": "mdi:wan",
         "label": "WAN IP",
-        "name": "openwrt_wan_ip",
+        "name": "Wan_ip",
     },
     "openwrt_wan_uptime": {
         "icon": "mdi:timer-sync-outline",
         "label": "WAN Uptime",
-        "name": "openwrt_wan_uptime",
+        "name": "Wan_uptime",
     },
     "openwrt_wan6_ip": {
         "icon": "mdi:wan",
         "label": "WAN IP6",
-        "name": "openwrt_wan6_ip",
+        "name": "Wan6_ip",
     },
     "openwrt_wan6_uptime": {
         "icon": "mdi:timer-sync-outline",
         "label": "WAN IP6 Uptime",
-        "name": "openwrt_wan6_uptime",
+        "name": "Wan6_uptime",
     },
     "openwrt_user_online": {
         "icon": "mdi:account-multiple",
         "label": "在线用户数",
-        "name": "openwrt_user_online",
+        "name": "User_online",
     },
     "openwrt_conncount": {
         "icon": "mdi:lan-connect",
         "label": "活动连接",
-        "name": "openwrt_conncount",
+        "name": "Connect_count",
     },
     
 }
@@ -80,41 +80,41 @@ SENSOR_TYPES = {
 BUTTON_TYPES = {
     "openwrt_restart": {
         "label": "OpenWrt重启",
-        "name": "openwrt_restart",
+        "name": "Restart",
         "device_class": "restart",
         "action": "restart",
     },
     "openwrt_restart_reconnect_wan": {
         "label": "OpenWrt重连wan网络",
-        "name": "openwrt_reconnect_wan",
+        "name": "Reconnect_wan",
         "device_class": "restart",
         "action": "reconnect_iface",
         "iface": "wan", 
     },
     "openwrt_restart_reconnect_gw": {
         "label": "OpenWrt重连GW网络",
-        "name": "openwrt_reconnect_gw", #实体名称
+        "name": "Reconnect_gw", #实体名称
         "device_class": "restart",
         "action": "reconnect_iface",
         "iface": "gw",  #网络接口
     },
     "openwrt_restart_reconnect_docker": {
         "label": "OpenWrt重连docker网络",
-        "name": "openwrt_reconnect_docker",
+        "name": "Reconnect_docker",
         "device_class": "restart",
         "action": "reconnect_iface",
         "iface": "docker", 
     },
     "openwrt_node_subscribe": {
         "label": "OpenWrt重新订阅fq节点",
-        "name": "openwrt_node_subscribe",
+        "name": "Node_subscribe",
         "device_class": "restart",
         "action": "submit_data",
         "parameter1": "admin/services/passwall/node_subscribe", 
         "parameter2": "admin/services/passwall/node_subscribe", 
         "body": {
-            "token": "action_token}}",
-            "cbi.submit": "1",
+            "token": "{{action_token}}",
+            "cbi.submit": "1",  #以下 cfg08b7d7 需要在浏览器工具中抓包获取，每个路由器值不一样。 
             "cbi.cbe.passwall.cfg08b7d7.subscribe_proxy": "1",
             "cbid.passwall.cfg08b7d7.filter_keyword_mode": "1",
             "cbid.passwall.cfg08b7d7.filter_discard_list": "s801",
@@ -126,7 +126,7 @@ BUTTON_TYPES = {
             "cbid.passwall.cfg08b7d7.trojan_type": "trojan-plus",
             "cbi.sts.passwall.subscribe_list": "",
             "cbid.passwall.cfg108b02.remark": "SS",
-            "cbid.passwall.cfg108b02.url": "填写节点订阅地址", #此处可填写自己的订阅地址
+            "cbid.passwall.cfg108b02.url": "https://xxxxxxxxxxxxxxxxxxxx",
             "cbid.passwall.cfg108b02._update": "手动订阅"
             }
     }
