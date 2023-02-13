@@ -106,6 +106,8 @@ class DataFetcher:
         
     
     def seconds_to_dhms(self, seconds):
+        if isinstance(seconds,str):
+            return seconds.replace("\n%","")
         days = seconds // (3600 * 24)
         hours = (seconds // 3600) % 24
         minutes = (seconds // 60) % 60
