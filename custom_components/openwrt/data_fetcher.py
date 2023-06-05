@@ -87,7 +87,7 @@ class DataFetcher:
 
         body = "luci_username=" + username + "&luci_password=" + passwd
         url =  host + DO_URL
-        
+        _LOGGER.debug("Requests remaining: %s", url)          
         try:
             async with timeout(10): 
                 resdata = await self._hass.async_add_executor_job(self.requestpost_cookies, url, header, body) 
@@ -99,9 +99,7 @@ class DataFetcher:
         except (
             ClientConnectorError
         ) as error:
-            raise UpdateFailed(error)
-        _LOGGER.debug("Requests remaining: %s", url)          
-       
+            raise UpdateFailed(error)       
         return resdata
         
     
@@ -131,7 +129,7 @@ class DataFetcher:
         body = ""
 
         url =  self._host + DO_URL + parameter
-        
+        _LOGGER.debug("Requests remaining: %s", url)
         try:
             async with timeout(10): 
                 resdata = await self._hass.async_add_executor_job(self.requestget_data, url, header)
@@ -139,7 +137,7 @@ class DataFetcher:
             ClientConnectorError
         ) as error:
             raise UpdateFailed(error)
-        _LOGGER.debug("Requests remaining: %s", url)
+        
         _LOGGER.debug(resdata)
         if resdata == 401 or resdata == 403:
             self._data = 401
@@ -208,7 +206,8 @@ class DataFetcher:
         }
              
         body = ""
-        url =  self._host + DO_URL + "/admin/status/overview"        
+        url =  self._host + DO_URL + "/admin/status/overview" 
+        _LOGGER.debug("Requests remaining: %s", url)        
         try:
             async with timeout(10): 
                 resdata = await self._hass.async_add_executor_job(self.requestget_data_text, url, header, body)
@@ -216,7 +215,7 @@ class DataFetcher:
             ClientConnectorError
         ) as error:
             raise UpdateFailed(error)
-        _LOGGER.debug("Requests remaining: %s", url)        
+        _LOGGER.debug(resdata)
         if resdata == 401 or resdata == 403:
             self._data = 401
             return
@@ -230,10 +229,10 @@ class DataFetcher:
         
         
     async def get_data(self, sysauth):  
-        threads = [
-            self._get_openwrt_status(sysauth),
+        tasks = [
+            asyncio.create_task(self._get_openwrt_status(sysauth)),
         ]
-        await asyncio.wait(threads)
+        await asyncio.gather(*tasks)
                     
         return self._data
 
