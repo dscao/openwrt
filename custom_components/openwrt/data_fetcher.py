@@ -221,9 +221,18 @@ class DataFetcher:
             return
         openwrtinfo = {}
         resdata = resdata.replace("\n","").replace("\r","")
-        openwrtinfo["sw_version"] = re.findall(r"内核版本</td><td>(.+?)</td>", str(resdata))
-        openwrtinfo["device_name"] = re.findall(r"<meta name=\"application-name\" content=\"(.+?) - LuCI", resdata)[0]
-        openwrtinfo["model"] = re.findall(r"固件版本</td><td>(.+?)</td>", resdata)
+        try:
+            openwrtinfo["sw_version"] = re.findall(r"内核版本</td><td>(.+?)</td>", str(resdata))
+        except Exception:
+            openwrtinfo["sw_version"] = ""
+        try:
+            openwrtinfo["device_name"] = re.findall(r"<meta name=\"application-name\" content=\"(.+?) - LuCI", resdata)[0]
+        except Exception:
+            openwrtinfo["device_name"] = "Openwrt"
+        try:
+            openwrtinfo["model"] = re.findall(r"固件版本</td><td>(.+?)</td>", resdata)
+        except Exception:
+            openwrtinfo["model"] = ""        
 
         return openwrtinfo
         
