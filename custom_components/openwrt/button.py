@@ -6,6 +6,7 @@ import re
 import requests
 from async_timeout import timeout
 from aiohttp.client_exceptions import ClientConnectorError
+from bs4 import BeautifulSoup
 
 from homeassistant.helpers.device_registry import DeviceEntryType
 
@@ -139,7 +140,7 @@ class OPENWRTButton(ButtonEntity):
         responsedata = requests.post(url, headers=headerstr, data = datastr, verify=False, allow_redirects=False)
         if responsedata.status_code != 200:
             return responsedata.status_code
-        _LOGGER.debug(responsedata)
+        #_LOGGER.debug(responsedata)
         return responsedata
         
     def requestget_data_text(self, url, headerstr):
@@ -169,9 +170,8 @@ class OPENWRTButton(ButtonEntity):
                 parameter1 = BUTTON_TYPES[self.kind]["parameter1"]
                 parameter2 = BUTTON_TYPES[self.kind]["parameter2"]
                 body = BUTTON_TYPES[self.kind]["body"]
-                # contenttype = "multipart/form-data; boundary=----" + re.findall(r"------(.+?)\r\n", body)[0],
 
-            url =  self._host + DO_URL + parameter1   
+            url =  self._host + DO_URL + parameter1
             try:
                 async with timeout(10): 
                     resdata = await self._hass.async_add_executor_job(self.requestget_data_text, url, header)
@@ -184,6 +184,19 @@ class OPENWRTButton(ButtonEntity):
             if resdata == 401 or resdata == 403:
                 self._data = 401
                 return
+            try:
+                soup = BeautifulSoup(resdata, 'html.parser')
+                form_inputs = soup.find_all('input')
+                form_data = {}
+                for input_tag in form_inputs:
+                    name = input_tag.get('name')
+                    value = input_tag.get('value')
+                    if name:
+                        if value != "删除所有订阅节点" and value != "删除已订阅的节点" and value != "手动订阅" and value != "删除" and value != "添加" and value != "保存&应用":
+                            form_data[name] = value
+            except: 
+                _LOGGER.debug("解析表单内容失败")
+                    
             resdata = resdata.replace("\n","").replace("\r","")
             action_tokena = re.findall(r"token: '(.+?)' ", str(resdata))
             action_tokenb = re.findall(r"name=\"token\" value=\"(.+?)\"", str(resdata))
@@ -192,13 +205,15 @@ class OPENWRTButton(ButtonEntity):
             if len(action_tokena)>0:            
                 action_token = action_tokena[0]
             elif len(action_tokenb)>0:
-                action_token = action_tokenb[0]
-            
+                action_token = action_tokenb[0]            
             _LOGGER.debug("action_token: %s ", action_token) 
-            if action == "submit_data":
+
+            if action == "submit_data":                
+                body = form_data or {}
                 body["token"] = action_token
             else:
                 body = body.replace("{{token}}", action_token)
+                
             header = {
                 "Cookie": "sysauth=" + sysauth,
                 "Accept": "*/*",

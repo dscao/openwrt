@@ -119,22 +119,6 @@ BUTTON_TYPES = {
         "action": "submit_data",
         "parameter1": "admin/services/passwall/node_subscribe", 
         "parameter2": "admin/services/passwall/node_subscribe", 
-        "body": {
-            "token": "{{action_token}}",
-            "cbi.submit": "1",  #以下 cfg08b7d7 需要在浏览器工具中抓包获取，每个路由器值不一样。 
-            "cbi.cbe.passwall.cfg08b7d7.subscribe_proxy": "1",
-            "cbid.passwall.cfg08b7d7.filter_keyword_mode": "1",
-            "cbid.passwall.cfg08b7d7.filter_discard_list": "s801",
-            "cbid.passwall.cfg08b7d7.filter_discard_list": "剩余流量",
-            "cbid.passwall.cfg08b7d7.filter_discard_list": "QQ群",
-            "cbid.passwall.cfg08b7d7.filter_discard_list": "官网",
-            "cbid.passwall.cfg08b7d7.filter_keep_list": "",
-            "cbid.passwall.cfg08b7d7.ss_aead_type": "xray",
-            "cbid.passwall.cfg08b7d7.trojan_type": "trojan-plus",
-            "cbi.sts.passwall.subscribe_list": "",
-            "cbid.passwall.cfg108b02.remark": "SS",
-            "cbid.passwall.cfg108b02.url": "https://xxxxxxxxxxxxxxxxxxxx",
-            "cbid.passwall.cfg108b02._update": "手动订阅"
-            }
+        "body": {}
     }
 }

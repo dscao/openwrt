@@ -206,7 +206,7 @@ class DataFetcher:
         }
              
         body = ""
-        url =  self._host + DO_URL + "/admin/status/overview" 
+        url =  self._host + DO_URL + "admin/status/overview"
         _LOGGER.debug("Requests remaining: %s", url)        
         try:
             async with timeout(10): 
@@ -215,7 +215,7 @@ class DataFetcher:
             ClientConnectorError
         ) as error:
             raise UpdateFailed(error)
-        _LOGGER.debug(resdata)
+        #_LOGGER.debug(resdata)
         if resdata == 401 or resdata == 403:
             self._data = 401
             return
