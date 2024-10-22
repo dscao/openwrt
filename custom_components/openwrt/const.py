@@ -14,7 +14,7 @@ UNDO_UPDATE_LISTENER = "undo_update_listener"
 
 ##### OPENWRT URL
 DO_URL = "/cgi-bin/luci/"
-
+DO_URL2 = "/ubus/"
 
 ### Sensor Configuration
 
@@ -104,13 +104,6 @@ BUTTON_TYPES = {
         "device_class": "restart",
         "action": "reconnect_iface",
         "iface": "gw",  #网络接口
-    },
-    "openwrt_restart_reconnect_docker": {
-        "label": "OpenWrt重连docker网络",
-        "name": "Reconnect_docker",
-        "device_class": "restart",
-        "action": "reconnect_iface",
-        "iface": "docker", 
     },
     "openwrt_node_subscribe": {
         "label": "OpenWrt重新订阅fq节点",

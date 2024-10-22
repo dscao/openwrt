@@ -18,6 +18,7 @@ from urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
 from .const import (
     DO_URL,
+    DO_URL2,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,7 +74,7 @@ class DataFetcher:
             return 403
         if responsedata.status_code != 200 and responsedata.status_code != 302:
             return responsedata.status_code        
-        resdata = responsedata.cookies["sysauth"]
+        resdata = responsedata.cookies.get("sysauth") or responsedata.cookies.get("sysauth_http") or responsedata.cookies.get("sysauth_https")
         return resdata         
         
     async def _login_openwrt(self):
@@ -160,7 +161,6 @@ class DataFetcher:
         else:
             self._data["openwrt_cputemp"] = 0
         
-        self._data["openwrt_uptime"] = self.seconds_to_dhms(resdata["uptime"])
         try:
             self._data["openwrt_uptime"] = self.seconds_to_dhms(resdata["uptime"])
         except Exception:
@@ -199,6 +199,84 @@ class DataFetcher:
         self._data["querytime"] = querytime
 
         return
+        
+    async def _get_openwrt_status2(self, sysauth):
+        body = '[{"jsonrpc":"2.0","id":2,"method":"call","params":["'+sysauth+'","system","info",{}]},{"jsonrpc":"2.0","id":4,"method":"call","params":["'+sysauth+'","luci","getCPUUsage",{}]},{"jsonrpc":"2.0","id":5,"method":"call","params":["'+sysauth+'","luci","getTempInfo",{}]},{"jsonrpc":"2.0","id":6,"method":"call","params":["'+sysauth+'","luci","getOnlineUsers",{}]},{"jsonrpc":"2.0","id":7,"method":"call","params":["'+sysauth+'","file","read",{"path": "/proc/sys/net/netfilter/nf_conntrack_count"}]},{"jsonrpc":"2.0","id":8,"method":"call","params":["'+sysauth+'","network.interface","dump",{}]}]'
+        url =  self._host + DO_URL2 + "?" + str(int(time.time() * 1000))
+        _LOGGER.debug("Requests remaining: %s", url)    
+        _LOGGER.debug(body)
+        header = {"content-type":"application/json"}
+        try:
+            async with timeout(10): 
+                resdata = await self._hass.async_add_executor_job(self.requestpost_data, url, header, body)
+        except (
+            ClientConnectorError
+        ) as error:
+            raise UpdateFailed(error)
+        _LOGGER.debug(resdata)
+        if resdata == 401 or resdata == 403:
+            self._data = 401
+            return
+        
+        self._data = {}
+
+        cpuinfo = resdata[1]["result"][1]["cpuusage"]
+        try:
+            cputemp = resdata[2]["result"][1]["cputemp"]
+        except:
+            cputemp = 0
+        self._data["openwrt_cputemp"] = cputemp
+        
+        systeminfo = resdata[0]["result"][1]
+        useronlineinfo = resdata[3]["result"]
+        conncountinfo = resdata[4]["result"]
+        networkinfo = resdata[5]["result"]
+
+        try:
+            self._data["openwrt_uptime"] = self.seconds_to_dhms(systeminfo["uptime"])
+        except Exception:
+            self._data["openwrt_uptime"] = systeminfo["uptime"]
+        self._data["openwrt_cpu"] = cpuinfo.replace("%","")
+        self._data["openwrt_memory"] = round((1 - systeminfo["memory"]["available"]/systeminfo["memory"]["total"])*100,0)
+        self._data["openwrt_memory_attrs"] = systeminfo["memory"]
+
+        if len(useronlineinfo)>1:
+            self._data["openwrt_user_online"] = useronlineinfo[1]["onlineusers"]
+        else:
+            self._data["openwrt_user_online"] = ""
+        if len(conncountinfo)>1:
+            self._data["openwrt_conncount"] = conncountinfo[1]["data"].replace("\n","")
+        else:
+            self._data["openwrt_conncount"] = ""
+        _LOGGER.debug(networkinfo) 
+        self._data["openwrt_wan_ip"] = ""
+        self._data["openwrt_wan_uptime"] = ""
+        self._data["openwrt_wan6_ip"] = ""
+        self._data["openwrt_wan6_uptime"] = ""
+        if len(networkinfo)>1:
+            for interface in networkinfo[1]["interface"]:
+                if interface["interface"].lower() == 'wan':
+                    ipv4_addresses = interface['ipv4-address']
+                    if len(ipv4_addresses) > 0:
+                        self._data["openwrt_wan_ip"] = ipv4_addresses[0]['address']
+                        self._data["openwrt_wan_uptime"] = interface['uptime']
+                        try:
+                            self._data["openwrt_wan_uptime"] = self.seconds_to_dhms(interface['uptime'])
+                        except Exception:
+                            self._data["openwrt_wan_uptime"] = interface['uptime']
+                elif interface['interface'].lower() == 'wan6':
+                    ipv6_addresses = interface['ipv6-address']
+                    if len(ipv6_addresses) > 0:
+                        self._data["openwrt_wan6_ip"] = ipv6_addresses[0]['address']
+                        try:
+                            self._data["openwrt_wan6_uptime"] = self.seconds_to_dhms(interface['uptime'])
+                        except Exception:
+                            self._data["openwrt_wan6_uptime"] = interface['uptime']
+
+        querytime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self._data["querytime"] = querytime
+
+        return
   
     async def _get_openwrt_version(self, sysauth):
         header = {
@@ -207,7 +285,7 @@ class DataFetcher:
              
         body = ""
         url =  self._host + DO_URL + "admin/status/overview"
-        _LOGGER.debug("Requests remaining: %s", url)        
+        _LOGGER.debug("Requests remaining: %s", url)
         try:
             async with timeout(10): 
                 resdata = await self._hass.async_add_executor_job(self.requestget_data_text, url, header, body)
@@ -232,14 +310,46 @@ class DataFetcher:
         try:
             openwrtinfo["model"] = re.findall(r"固件版本</td><td>(.+?)</td>", resdata)
         except Exception:
-            openwrtinfo["model"] = ""        
+            openwrtinfo["model"] = ""
 
+        return openwrtinfo
+    async def _get_openwrt_version2(self, sysauth):
+        
+        #body = {"jsonrpc":"2.0","id":"init","method":"list"}
+        body = '[{"jsonrpc":"2.0","id":1,"method":"call","params":["'+sysauth+'","system","board",{}]}]'
+        url =  self._host + DO_URL2 + "?" + str(int(time.time() * 1000))
+        _LOGGER.debug("Requests remaining: %s", url)    
+        _LOGGER.debug(body)
+        header = {"content-type":"application/json"}
+        try:
+            async with timeout(10): 
+                resdata = await self._hass.async_add_executor_job(self.requestpost_data, url, header, body)
+        except (
+            ClientConnectorError
+        ) as error:
+            raise UpdateFailed(error)
+        _LOGGER.debug(resdata)
+        if resdata == 401 or resdata == 403:
+            self._data = 401
+            return
+        openwrtinfo = {}
+        openwrtinfo["sw_version"] = resdata[0]["result"][1]["kernel"]
+        openwrtinfo["device_name"] = resdata[0]["result"][1]["hostname"]
+        openwrtinfo["model"] = resdata[0]["result"][1]["release"]["revision"]
         return openwrtinfo
         
         
     async def get_data(self, sysauth):  
         tasks = [
             asyncio.create_task(self._get_openwrt_status(sysauth)),
+        ]
+        await asyncio.gather(*tasks)
+                    
+        return self._data
+        
+    async def get_data2(self, sysauth):  
+        tasks = [
+            asyncio.create_task(self._get_openwrt_status2(sysauth)),
         ]
         await asyncio.gather(*tasks)
                     

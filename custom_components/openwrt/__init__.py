@@ -53,10 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         UNDO_UPDATE_LISTENER: undo_listener,
     }
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -96,6 +93,7 @@ class OPENWRTDataUpdateCoordinator(DataUpdateCoordinator):
         self._token_expire_time = 0
         self._allow_login = True
         self._sw_version = "1.0"
+        self._version = "1.0"
         self._device_name = "OpenWrt"
         self._model = "OpenWrt Router"
     
@@ -112,7 +110,8 @@ class OPENWRTDataUpdateCoordinator(DataUpdateCoordinator):
                 self._token = await self._fetcher._login_openwrt()
                 if self._token == 403:
                     self._allow_login = False
-                self._token_expire_time = time.time() + 60*60*2        
+                self._token_expire_time = time.time() + 60*60*2    
+                _LOGGER.debug("update_token_expire_time=%s", self._token_expire_time)                
                 return self._token
 
     async def _async_update_data(self):
@@ -126,13 +125,22 @@ class OPENWRTDataUpdateCoordinator(DataUpdateCoordinator):
             
             if self._sw_version == "1.0":
                 openwrtinfodata = await self._fetcher._get_openwrt_version(sysauth)
+                _LOGGER.debug(openwrtinfodata) 
+                if openwrtinfodata == None:
+                    openwrtinfodata = await self._fetcher._get_openwrt_version2(sysauth)
+                    _LOGGER.debug(openwrtinfodata) 
+                    self._version = "2.0"
+                
                 self._sw_version = openwrtinfodata["sw_version"]
                 self._device_name = openwrtinfodata["device_name"]
                 self._model = openwrtinfodata["model"]
             
             try:
                 async with timeout(10):
-                    data = await self._fetcher.get_data(sysauth)
+                    if self._version == "1.0":
+                        data = await self._fetcher.get_data(sysauth)
+                    else:
+                        data = await self._fetcher.get_data2(sysauth)
                     if data == 401:
                         self._token_expire_time = 0
                         return

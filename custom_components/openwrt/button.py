@@ -20,6 +20,7 @@ from .const import (
     CONF_USERNAME, 
     CONF_PASSWD, 
     DO_URL,
+    DO_URL2,
 )
 
 from .data_fetcher import DataFetcher
@@ -123,7 +124,6 @@ class OPENWRTButton(ButtonEntity):
     async def async_press(self) -> None:
         """Handle the button press."""        
         await self._openwrt_action(BUTTON_TYPES[self.kind]["action"])
-        
 
     async def async_added_to_hass(self):
         """Connect to dispatcher listening for entity data notifications."""
@@ -154,15 +154,15 @@ class OPENWRTButton(ButtonEntity):
         if self._allow_login == True:
             body = "token={{token}}&_=0.7647894831805453"
             contenttype = "application/x-www-form-urlencoded"
-            sysauth = await self.get_access_token()          
-                
+            sysauth = await self.get_access_token()
             header = {
-                "Cookie": "sysauth=" + sysauth
+                "Cookie": "sysauth=" + sysauth + ";sysauth_http=" + sysauth
             } 
-            
+
             if action == "restart":
                 parameter1 = "/admin/system/reboot"       
                 parameter2 = "/admin/system/reboot/call" 
+                
             elif action == "reconnect_iface":
                 parameter1 = "admin/network/network"
                 parameter2 = "admin/network/iface_reconnect/" + BUTTON_TYPES[self.kind]["iface"]
@@ -170,7 +170,7 @@ class OPENWRTButton(ButtonEntity):
                 parameter1 = BUTTON_TYPES[self.kind]["parameter1"]
                 parameter2 = BUTTON_TYPES[self.kind]["parameter2"]
                 body = BUTTON_TYPES[self.kind]["body"]
-
+            
             url =  self._host + DO_URL + parameter1
             try:
                 async with timeout(10): 
@@ -180,7 +180,8 @@ class OPENWRTButton(ButtonEntity):
             ) as error:
                 raise UpdateFailed(error)
             _LOGGER.debug("Requests remaining: %s", url)
-            #_LOGGER.debug(resdata)
+            _LOGGER.debug(resdata)
+            
             if resdata == 401 or resdata == 403:
                 self._data = 401
                 return
@@ -205,7 +206,10 @@ class OPENWRTButton(ButtonEntity):
             if len(action_tokena)>0:            
                 action_token = action_tokena[0]
             elif len(action_tokenb)>0:
-                action_token = action_tokenb[0]            
+                action_token = action_tokenb[0]
+            else:
+                await self._openwrt_action2(action)
+                return
             _LOGGER.debug("action_token: %s ", action_token) 
 
             if action == "submit_data":                
@@ -215,7 +219,7 @@ class OPENWRTButton(ButtonEntity):
                 body = body.replace("{{token}}", action_token)
                 
             header = {
-                "Cookie": "sysauth=" + sysauth,
+                "Cookie": "sysauth=" + sysauth + ";sysauth_http=" + sysauth,
                 "Accept": "*/*",
                 "Accept-Encoding": "gzip, deflate",
                 "Accept-Language": "zh-CN,zh-TW;q=0.9,zh;q=0.8,en-US;q=0.7,en;q=0.6",
@@ -242,6 +246,35 @@ class OPENWRTButton(ButtonEntity):
                 self._data = 401
                 return        
                     
+        self._state = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        _LOGGER.info("操作openwrt: %s ", url)    
+        return "OK"
+        
+    async def _openwrt_action2(self, action): 
+        if action == "submit_data":
+            return
+        if self._allow_login == True:
+            url =  self._host + DO_URL2 + "?" + str(int(time.time() * 1000))
+            sysauth = await self.get_access_token()          
+            header = {"content-type":"application/json"}
+            if action == "restart":
+                body = body = '[{"jsonrpc":"2.0","id":1,"method":"call","params":["'+sysauth+'","params":["'+sysauth+'","system","reboot",{}]}]'
+            elif action == "reconnect_iface":
+                body = '[{"jsonrpc":"2.0","id":1,"method":"call","params":["'+sysauth+'","file","exec",{"command":"/sbin/ifup","params":["'+BUTTON_TYPES[self.kind]["iface"]+'"],"env":null}]}]'
+            _LOGGER.debug(url)
+            _LOGGER.debug(body)
+            try:
+                async with timeout(10): 
+                    resdata = await self._hass.async_add_executor_job(self.requestpost_data, url, header, body)
+            except (
+                ClientConnectorError
+            ) as error:
+                raise UpdateFailed(error)
+            _LOGGER.debug("Requests remaining: %s", url)
+            _LOGGER.debug(resdata)
+            if resdata == 401 or resdata == 403:
+                self._data = 401
+                return
         self._state = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         _LOGGER.info("操作openwrt: %s ", url)    
         return "OK"

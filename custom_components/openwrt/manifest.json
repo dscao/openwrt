@@ -1,13 +1,13 @@
 {
   "domain": "openwrt",
   "name": "openwrt",
-  "codeowners": ["@dscao"],
   "config_flow": true,
-  "dependencies": [],
   "documentation": "https://github.com/dscao/openwrt",
-  "integration_type": "device",
-  "iot_class": "local_polling",
-  "issue_tracker": "https://github.com/dscao/openwrt/issues",
+  "version": "2.0",
   "requirements": [],
-  "version": "1.3"
+  "dependencies": [],
+  "codeowners": [
+    "@dscao"
+  ],
+  "iot_class": "local_polling"
 }
