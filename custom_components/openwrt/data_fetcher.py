@@ -166,7 +166,7 @@ class DataFetcher:
         except Exception:
             self._data["openwrt_uptime"] = resdata["uptime"]
         self._data["openwrt_cpu"] = resdata["cpuusage"].replace("\n%","")
-        self._data["openwrt_memory"] = round((1 - resdata["memory"]["available"]/resdata["memory"]["total"])*100,0)
+        self._data["openwrt_memory"] = round((1 - resdata["memory"]["free"]/resdata["memory"]["total"])*100,0)
         self._data["openwrt_memory_attrs"] = resdata["memory"]
         self._data["openwrt_conncount"] = resdata["conncount"]
         if resdata.get("userinfo"):
@@ -237,7 +237,7 @@ class DataFetcher:
         except Exception:
             self._data["openwrt_uptime"] = systeminfo["uptime"]
         self._data["openwrt_cpu"] = cpuinfo.replace("%","")
-        self._data["openwrt_memory"] = round((1 - systeminfo["memory"]["available"]/systeminfo["memory"]["total"])*100,0)
+        self._data["openwrt_memory"] = round((1 - systeminfo["memory"]["free"]/systeminfo["memory"]["total"])*100,0)
         self._data["openwrt_memory_attrs"] = systeminfo["memory"]
 
         if len(useronlineinfo)>1:
