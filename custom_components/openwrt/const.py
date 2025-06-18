@@ -43,6 +43,16 @@ SENSOR_TYPES = {
         "name": "Memory",
         "unit_of_measurement": "%",
     },   
+    "openwrt_user_online": {
+        "icon": "mdi:account-multiple",
+        "label": "在线用户数",
+        "name": "User_online",
+    },
+    "openwrt_conncount": {
+        "icon": "mdi:lan-connect",
+        "label": "活动连接",
+        "name": "Connect_count",
+    },
     "openwrt_wan_ip": {
         "icon": "mdi:wan",
         "label": "WAN IP",
@@ -63,17 +73,26 @@ SENSOR_TYPES = {
         "label": "WAN IP6 Uptime",
         "name": "Wan6_uptime",
     },
-    "openwrt_user_online": {
-        "icon": "mdi:account-multiple",
-        "label": "在线用户数",
-        "name": "User_online",
+        "openwrt_lan_ip": {
+        "icon": "mdi:wan",
+        "label": "LAN IP",
+        "name": "lan_ip",
     },
-    "openwrt_conncount": {
-        "icon": "mdi:lan-connect",
-        "label": "活动连接",
-        "name": "Connect_count",
+    "openwrt_lan_uptime": {
+        "icon": "mdi:timer-sync-outline",
+        "label": "LAN Uptime",
+        "name": "lan_uptime",
     },
-    
+    "openwrt_lan6_ip": {
+        "icon": "mdi:wan",
+        "label": "LAN IP6",
+        "name": "lan6_ip",
+    },
+    "openwrt_lan6_uptime": {
+        "icon": "mdi:timer-sync-outline",
+        "label": "LAN6 Uptime",
+        "name": "lan6_uptime",
+    },
 }
 
  
@@ -97,6 +116,20 @@ BUTTON_TYPES = {
         "device_class": "restart",
         "action": "reconnect_iface",
         "iface": "wan6", 
+    },
+    "openwrt_restart_reconnect_lan": {
+        "label": "OpenWrt重连lan网络",
+        "name": "Reconnect_lan",
+        "device_class": "restart",
+        "action": "reconnect_iface",
+        "iface": "lan", 
+    },
+    "openwrt_restart_reconnect_lan6": {
+        "label": "OpenWrt重连lan6",
+        "name": "Reconnect_lan6",
+        "device_class": "restart",
+        "action": "reconnect_iface",
+        "iface": "lan6",
     },
     "openwrt_restart_reconnect_gw": {
         "label": "OpenWrt重连GW网络",
