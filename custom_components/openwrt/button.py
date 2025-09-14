@@ -258,7 +258,7 @@ class OPENWRTButton(ButtonEntity):
             sysauth = await self.get_access_token()          
             header = {"content-type":"application/json"}
             if action == "restart":
-                body = body = '[{"jsonrpc":"2.0","id":1,"method":"call","params":["'+sysauth+'","params":["'+sysauth+'","system","reboot",{}]}]'
+                body = '[{"jsonrpc":"2.0","id":1,"method":"call","params":["'+sysauth+'","system","reboot",{}]}]'
             elif action == "reconnect_iface":
                 body = '[{"jsonrpc":"2.0","id":1,"method":"call","params":["'+sysauth+'","file","exec",{"command":"/sbin/ifup","params":["'+BUTTON_TYPES[self.kind]["iface"]+'"],"env":null}]}]'
             _LOGGER.debug(url)
