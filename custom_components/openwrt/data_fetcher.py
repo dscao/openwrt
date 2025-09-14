@@ -272,6 +272,22 @@ class DataFetcher:
                             self._data["openwrt_wan6_uptime"] = self.seconds_to_dhms(interface['uptime'])
                         except Exception:
                             self._data["openwrt_wan6_uptime"] = interface['uptime']
+                elif interface['interface'].lower() == 'lan':
+                    ipv4_addresses = interface['ipv4-address']
+                    if len(ipv4_addresses) > 0:
+                        self._data["openwrt_lan_ip"] = ipv4_addresses[0]['address']
+                        try:
+                            self._data["openwrt_lan_uptime"] = self.seconds_to_dhms(interface['uptime'])
+                        except Exception:
+                            self._data["openwrt_lan_uptime"] = interface['uptime']
+                elif interface['interface'].lower() == 'lan6':
+                    ipv6_addresses = interface['ipv6-address']
+                    if len(ipv6_addresses) > 0:
+                        self._data["openwrt_lan6_ip"] = ipv6_addresses[0]['address']
+                        try:
+                            self._data["openwrt_lan6_uptime"] = self.seconds_to_dhms(interface['uptime'])
+                        except Exception:
+                            self._data["openwrt_lan6_uptime"] = interface['uptime']
 
         querytime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self._data["querytime"] = querytime
