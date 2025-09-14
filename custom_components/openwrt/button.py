@@ -160,8 +160,8 @@ class OPENWRTButton(ButtonEntity):
             } 
 
             if action == "restart":
-                parameter1 = "/admin/system/reboot"       
-                parameter2 = "/admin/system/reboot/call" 
+                parameter1 = "admin/system/reboot"       
+                parameter2 = "admin/system/reboot/call" 
                 
             elif action == "reconnect_iface":
                 parameter1 = "admin/network/network"
