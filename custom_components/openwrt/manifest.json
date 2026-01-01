@@ -7,5 +7,5 @@
   "documentation": "https://github.com/dscao/openwrt",
   "iot_class": "local_polling",
   "requirements": [],
-  "version": "2025.9.14"
+  "version": "2025.12.31"
 }
