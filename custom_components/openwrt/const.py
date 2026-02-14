@@ -137,18 +137,18 @@ BUTTON_TYPES: tuple[OpenWrtButtonEntityDescription, ...] = (
         ubus_method="network_reconnect",
         is_interface_template=True,
     ),
-    # Passwall 订阅更新 (显式调用 lua 解释器)
-    OpenWrtButtonEntityDescription(
-        key="node_subscribe_passwall",
-        name="Passwall Update Subscribe",
-        icon="mdi:update",
-        ubus_method="exec_command",
-        # command: /usr/bin/lua, params: [脚本路径, 参数]
-        ubus_payload={
-            "command": "/usr/bin/lua", 
-            "params": ["/usr/share/passwall/subscribe.lua", "start", "cfg0fb7d7"]
-        }
-    ),
+    # Passwall 订阅更新 (显式调用 lua 解释器) 无效果注释掉
+    #OpenWrtButtonEntityDescription(
+    #    key="node_subscribe_passwall",
+    #    name="Passwall Update Subscribe",
+    #    icon="mdi:update",
+    #    ubus_method="exec_command",
+    #    # command: /usr/bin/lua, params: [脚本路径, 参数]
+    #    ubus_payload={
+    #        "command": "/usr/bin/lua", 
+    #        "params": ["/usr/share/passwall/subscribe.lua", "start", "cfg0fb7d7"]
+    #    }
+    #),
     
     # OpenClash 订阅更新 (显式调用 sh 解释器)
     OpenWrtButtonEntityDescription(
