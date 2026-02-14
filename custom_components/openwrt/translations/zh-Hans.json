@@ -10,22 +10,24 @@
         },
         "step": {
             "user": {
-                "title":"OpenWrt路由器",
+                "title": "连接 OpenWrt 路由器",
+                "description": "请输入路由器的登录信息。请确保路由器已安装 Luci 且能正常访问。",
                 "data": {
-                    "password": "密码",
+                    "host": "主机地址 (例如 http://192.168.1.1)",
                     "username": "用户名",
-					"host": "主机Web地址（如：http://192.168.2.1）"
+                    "password": "密码"
                 }
             }
         }
     },
     "options": {
         "step": {
-            "user":{
-                "data": {                    
-					"update_interval_seconds": "刷新间隔时间(10-3600 秒)"
-                },
-                "description": "设备请求刷新时间"
+            "init": {
+                "title": "OpenWrt 设置",
+                "description": "配置数据刷新频率",
+                "data": {
+                    "update_interval_seconds": "刷新间隔 (秒)"
+                }
             }
         }
     }

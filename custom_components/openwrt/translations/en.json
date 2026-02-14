@@ -1,31 +1,33 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "already_configured": "设备已经配置"
         },
         "error": {
-            "cannot_connect": "Failed to connect",
-            "invalid_auth": "Invalid authentication",
-            "unknown": "Unexpected error"
+            "cannot_connect": "连接失败",
+            "invalid_auth": "用户名或密码错误",
+            "unknown": "未知错误"
         },
         "step": {
             "user": {
-                "title":"OPENWRT",
+                "title": "连接 OpenWrt 路由器",
+                "description": "请输入路由器的登录信息。请确保路由器已安装 Luci 且能正常访问。",
                 "data": {
-                    "password": "Password",
-                    "username": "Username",
-					"host": "Host web, such as: http://192.168.2.1"
+                    "host": "主机地址 (例如 http://192.168.1.1)",
+                    "username": "用户名",
+                    "password": "密码"
                 }
             }
         }
     },
     "options": {
         "step": {
-            "user":{
-                "data": {                    
-					"update_interval_seconds": "Update_interval(10-3600 seconds)"
-                },
-                "description": "Set Entity Update_interval"
+            "init": {
+                "title": "OpenWrt 设置",
+                "description": "配置数据刷新频率",
+                "data": {
+                    "update_interval_seconds": "刷新间隔 (秒)"
+                }
             }
         }
     }

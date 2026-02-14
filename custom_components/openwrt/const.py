@@ -1,150 +1,165 @@
-"""Constants for the openwrt health code integration."""
+"""Constants for the openwrt integration."""
+from __future__ import annotations
+from dataclasses import dataclass
+from typing import Final
 
-DOMAIN = "openwrt"
+from homeassistant.components.sensor import (
+    SensorEntityDescription,
+    SensorStateClass,
+    SensorDeviceClass,
+)
+from homeassistant.components.button import ButtonEntityDescription
+from homeassistant.const import (
+    PERCENTAGE,
+    UnitOfTemperature,
+    UnitOfTime,
+)
 
-######### CONF KEY
-CONF_USERNAME = "username"
-CONF_PASSWD = "passwd"
-CONF_HOST = "host"
-CONF_TOKEN_EXPIRE_TIME = "token_expire_time"
-COORDINATOR = "coordinator"
-CONF_UPDATE_INTERVAL = "update_interval_seconds"
+DOMAIN: Final = "openwrt"
 
-UNDO_UPDATE_LISTENER = "undo_update_listener"
+CONF_HOST: Final = "host"
+CONF_USERNAME: Final = "username"
+CONF_PASSWORD: Final = "password"
+CONF_UPDATE_INTERVAL: Final = "update_interval_seconds"
 
-##### OPENWRT URL
-DO_URL = "/cgi-bin/luci/"
-DO_URL2 = "/ubus/"
+@dataclass
+class OpenWrtSensorEntityDescription(SensorEntityDescription):
+    """自定义 OpenWrt 传感器描述类"""
+    json_key: str | None = None
+    is_human_readable: bool = False
+    is_interface_template: bool = False
+    template_suffix: str | None = None # e.g. "_ip", "_ipv6", "_uptime"
 
-### Sensor Configuration
+@dataclass
+class OpenWrtButtonEntityDescription(ButtonEntityDescription):
+    """自定义 OpenWrt 按钮描述类"""
+    url_path: str | None = None
+    req_method: str = "POST" 
+    ubus_method: str | None = None
+    ubus_payload: str | dict | None = None
+    is_interface_template: bool = False
 
-SENSOR_TYPES = {
-    "openwrt_uptime": {
-        "icon": "mdi:clock-time-eight",
-        "label": "OpenWrt启动时长",
-        "name": "Uptime",
-    },
-     "openwrt_cpu": {
-        "icon": "mdi:cpu-64-bit",
-        "label": "CPU占用",
-        "name": "CPU",
-        "unit_of_measurement": "%",
-    },
-     "openwrt_cputemp": {
-        "icon": "mdi:thermometer",
-        "label": "CPU温度",
-        "name": "CPU_temperature",
-        "unit_of_measurement": "°C",
-        "device_class": "temperature",
-    },
-    "openwrt_memory": {
-        "icon": "mdi:memory",
-        "label": "内存占用",
-        "name": "Memory",
-        "unit_of_measurement": "%",
-    },   
-    "openwrt_user_online": {
-        "icon": "mdi:account-multiple",
-        "label": "在线用户数",
-        "name": "User_online",
-    },
-    "openwrt_conncount": {
-        "icon": "mdi:lan-connect",
-        "label": "活动连接",
-        "name": "Connect_count",
-    },
-    "openwrt_wan_ip": {
-        "icon": "mdi:wan",
-        "label": "WAN IP",
-        "name": "Wan_ip",
-    },
-    "openwrt_wan_uptime": {
-        "icon": "mdi:timer-sync-outline",
-        "label": "WAN Uptime",
-        "name": "Wan_uptime",
-    },
-    "openwrt_wan6_ip": {
-        "icon": "mdi:wan",
-        "label": "WAN IP6",
-        "name": "Wan6_ip",
-    },
-    "openwrt_wan6_uptime": {
-        "icon": "mdi:timer-sync-outline",
-        "label": "WAN IP6 Uptime",
-        "name": "Wan6_uptime",
-    },
-        "openwrt_lan_ip": {
-        "icon": "mdi:wan",
-        "label": "LAN IP",
-        "name": "lan_ip",
-    },
-    "openwrt_lan_uptime": {
-        "icon": "mdi:timer-sync-outline",
-        "label": "LAN Uptime",
-        "name": "lan_uptime",
-    },
-    "openwrt_lan6_ip": {
-        "icon": "mdi:wan",
-        "label": "LAN IP6",
-        "name": "lan6_ip",
-    },
-    "openwrt_lan6_uptime": {
-        "icon": "mdi:timer-sync-outline",
-        "label": "LAN6 Uptime",
-        "name": "lan6_uptime",
-    },
-}
+# --- 传感器定义 ---
+SENSOR_TYPES: tuple[OpenWrtSensorEntityDescription, ...] = (
+    # 系统级传感器 (静态)
+    OpenWrtSensorEntityDescription(
+        key="uptime",
+        json_key="openwrt_uptime",
+        name="Uptime",
+        icon="mdi:clock-time-eight",
+        is_human_readable=True, 
+    ),
+    OpenWrtSensorEntityDescription(
+        key="cpu_load",
+        json_key="openwrt_cpu",
+        name="CPU Load",
+        icon="mdi:cpu-64-bit",
+        unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    OpenWrtSensorEntityDescription(
+        key="cpu_temp",
+        json_key="openwrt_cputemp",
+        name="CPU Temperature",
+        icon="mdi:thermometer",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    OpenWrtSensorEntityDescription(
+        key="memory_usage",
+        json_key="openwrt_memory",
+        name="Memory Usage",
+        icon="mdi:memory",
+        unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    OpenWrtSensorEntityDescription(
+        key="online_users",
+        json_key="openwrt_user_online",
+        name="Online Users",
+        icon="mdi:account-multiple",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    OpenWrtSensorEntityDescription(
+        key="active_connections",
+        json_key="openwrt_conncount",
+        name="Active Connections",
+        icon="mdi:lan-connect",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    
+    # [核心修改] 接口动态传感器模板
+    
+    # 模板 1: 接口 IP
+    OpenWrtSensorEntityDescription(
+        key="interface_ip", # 占位符
+        name="{} IP",       # 占位符，例如: WAN IP
+        icon="mdi:ip-network",
+        is_interface_template=True,
+        template_suffix="_ip",
+    ),
+    
+    # 模板 2: 接口 IPv6
+    OpenWrtSensorEntityDescription(
+        key="interface_ipv6",
+        name="{} IPv6",
+        icon="mdi:ip-network-outline",
+        is_interface_template=True,
+        template_suffix="_ipv6",
+    ),
+    
+    # 模板 3: 接口在线时间
+    OpenWrtSensorEntityDescription(
+        key="interface_uptime",
+        name="{} Uptime",
+        icon="mdi:timer-sync-outline",
+        is_human_readable=True,
+        is_interface_template=True,
+        template_suffix="_uptime",
+    ),
+)
 
- 
-BUTTON_TYPES = {
-    "openwrt_restart": {
-        "label": "OpenWrt重启",
-        "name": "Restart",
-        "device_class": "restart",
-        "action": "restart",
-    },
-    "openwrt_restart_reconnect_wan": {
-        "label": "OpenWrt重连wan网络",
-        "name": "Reconnect_wan",
-        "device_class": "restart",
-        "action": "reconnect_iface",
-        "iface": "wan", 
-    },
-    "openwrt_restart_reconnect_wan6": {
-        "label": "OpenWrt重连wan6网络",
-        "name": "Reconnect_wan6",
-        "device_class": "restart",
-        "action": "reconnect_iface",
-        "iface": "wan6", 
-    },
-    "openwrt_restart_reconnect_lan": {
-        "label": "OpenWrt重连lan网络",
-        "name": "Reconnect_lan",
-        "device_class": "restart",
-        "action": "reconnect_iface",
-        "iface": "lan", 
-    },
-    "openwrt_restart_reconnect_lan6": {
-        "label": "OpenWrt重连lan6",
-        "name": "Reconnect_lan6",
-        "device_class": "restart",
-        "action": "reconnect_iface",
-        "iface": "lan6",
-    },
-    "openwrt_restart_reconnect_gw": {
-        "label": "OpenWrt重连GW网络",
-        "name": "Reconnect_gw", #实体名称
-        "device_class": "restart",
-        "action": "reconnect_iface",
-        "iface": "gw",  #网络接口
-    },
-    "openwrt_node_subscribe": {
-        "label": "OpenWrt重新订阅fq节点",
-        "name": "Node_subscribe",
-        "device_class": "restart",
-        "action": "submit_data",
-        "parameter1": "admin/services/passwall/node_subscribe", 
-        "parameter2": "admin/services/passwall/node_subscribe", 
-        "body": {}
-    }
-}
+# --- 按钮定义 ---
+BUTTON_TYPES: tuple[OpenWrtButtonEntityDescription, ...] = (
+    OpenWrtButtonEntityDescription(
+        key="restart",
+        name="Restart Router",
+        icon="mdi:restart",
+        device_class="restart",
+        ubus_method="system_reboot",
+    ),
+    # 接口重连模板
+    OpenWrtButtonEntityDescription(
+        key="reconnect_interface",
+        name="Reconnect {}",
+        icon="mdi:lan-connect",
+        ubus_method="network_reconnect",
+        is_interface_template=True,
+    ),
+    # Passwall 订阅更新 (显式调用 lua 解释器)
+    OpenWrtButtonEntityDescription(
+        key="node_subscribe_passwall",
+        name="Passwall Update Subscribe",
+        icon="mdi:update",
+        ubus_method="exec_command",
+        # command: /usr/bin/lua, params: [脚本路径, 参数]
+        ubus_payload={
+            "command": "/usr/bin/lua", 
+            "params": ["/usr/share/passwall/subscribe.lua", "start", "cfg0fb7d7"]
+        }
+    ),
+    
+    # OpenClash 订阅更新 (显式调用 sh 解释器)
+    OpenWrtButtonEntityDescription(
+        key="node_subscribe_openclash",
+        name="OpenClash Update Subscribe",
+        icon="mdi:update",
+        ubus_method="exec_command",
+        # command: /bin/sh, params: [脚本路径, 参数]
+        ubus_payload={
+            "command": "/bin/sh", 
+            "params": ["/usr/share/openclash/openclash.sh", "-s"]
+        }
+    ),
+)
