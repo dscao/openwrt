@@ -151,15 +151,15 @@ BUTTON_TYPES: tuple[OpenWrtButtonEntityDescription, ...] = (
     #),
     
     # OpenClash 订阅更新 (显式调用 sh 解释器)
-    OpenWrtButtonEntityDescription(
-        key="node_subscribe_openclash",
-        name="OpenClash Update Subscribe",
-        icon="mdi:update",
-        ubus_method="exec_command",
-        # command: /bin/sh, params: [脚本路径, 参数]
-        ubus_payload={
-            "command": "/bin/sh", 
-            "params": ["/usr/share/openclash/openclash.sh", "-s"]
-        }
-    ),
+    #OpenWrtButtonEntityDescription(
+    #    key="node_subscribe_openclash",
+    #    name="OpenClash Update Subscribe",
+    #    icon="mdi:update",
+    #    ubus_method="exec_command",
+    #    # command: /bin/sh, params: [脚本路径, 参数]
+    #    ubus_payload={
+    #        "command": "/bin/sh", 
+    #        "params": ["/usr/share/openclash/openclash.sh", "-s"]
+    #    }
+    #),
 )
